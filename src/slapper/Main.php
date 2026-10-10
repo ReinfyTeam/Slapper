@@ -20,6 +20,9 @@ use pocketmine\entity\EntityFactory;
 use pocketmine\item\StringToItemParser;
 
 use pocketmine\nbt\tag\CompoundTag;
+use pocketmine\nbt\tag\DoubleTag;
+use pocketmine\nbt\tag\FloatTag;
+use pocketmine\nbt\tag\ListTag;
 use pocketmine\nbt\tag\StringTag;
 use pocketmine\player\Player;
 use pocketmine\plugin\PluginBase;
@@ -572,8 +575,11 @@ class Main extends PluginBase implements Listener {
                                 return true;
                             }
                             $nbt = $this->makeNBT($chosenType, $sender, $name);
-                            /** @var SlapperEntity $entity */
-                            $entity = Entity::createEntity("Slapper" . $chosenType, $sender->getWorld(), $nbt);
+                            $entity = EntityFactory::getInstance()->createFromData($sender->getWorld(), $nbt);
+                            if (!$entity instanceof SlapperEntity && !$entity instanceof SlapperHuman) {
+                                $sender->sendMessage($this->prefix . "Unable to create that entity type.");
+                                return true;
+                            }
                             (new SlapperCreationEvent($entity, "Slapper" . $chosenType, $sender, SlapperCreationEvent::CAUSE_COMMAND))->call();
                             $entity->spawnToAll();
                             $sender->sendMessage($this->prefix . $chosenType . " entity spawned with name " . TextFormat::WHITE . "\"" . TextFormat::BLUE . $name . TextFormat::WHITE . "\"" . TextFormat::GREEN . " and entity ID " . TextFormat::BLUE . $entity->getId());
@@ -605,23 +611,39 @@ class Main extends PluginBase implements Listener {
      *
      * @return CompoundTag
      */
-    private function makeNBT($type, Player $player, string $name): CompoundTag {
-        $nbt = Entity::createBaseNBT($player, null, $player->getYaw(), $player->getPitch());
+    private function makeNBT(string $type, Player $player, string $name): CompoundTag {
+        $location = $player->getLocation();
+        $nbt = CompoundTag::create()
+            ->setTag(Entity::TAG_POS, new ListTag([
+                new DoubleTag($location->x),
+                new DoubleTag($location->y),
+                new DoubleTag($location->z)
+            ]))
+            ->setTag(Entity::TAG_MOTION, new ListTag([
+                new DoubleTag(0.0),
+                new DoubleTag(0.0),
+                new DoubleTag(0.0)
+            ]))
+            ->setTag(Entity::TAG_ROTATION, new ListTag([
+                new FloatTag($location->yaw),
+                new FloatTag($location->pitch)
+            ]))
+            ->setString(EntityFactory::TAG_IDENTIFIER, "Slapper" . $type)
+            ->setTag("Commands", CompoundTag::create());
         $nbt->setShort("Health", 1);
-        $nbt->setTag(new CompoundTag("Commands", []));
         $nbt->setString("MenuName", "");
         $nbt->setString("CustomName", $name);
         $nbt->setString("SlapperVersion", $this->getDescription()->getVersion());
         if ($type === "Human") {
-            $player->saveNBT();
-
-            $inventoryTag = $player->namedtag->getListTag("Inventory");
-            assert($inventoryTag !== null);
-            $nbt->setTag(clone $inventoryTag);
-
-            $skinTag = $player->namedtag->getCompoundTag("Skin");
-            assert($skinTag !== null);
-            $nbt->setTag(clone $skinTag);
+            $playerNbt = $player->saveNBT();
+            $inventoryTag = $playerNbt->getListTag("Inventory");
+            if ($inventoryTag !== null) {
+                $nbt->setTag("Inventory", clone $inventoryTag);
+            }
+            $skinTag = $playerNbt->getCompoundTag("Skin");
+            if ($skinTag !== null) {
+                $nbt->setTag("Skin", clone $skinTag);
+            }
         }
         return $nbt;
     }
