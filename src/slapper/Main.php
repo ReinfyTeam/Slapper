@@ -181,7 +181,7 @@ class Main extends PluginBase implements Listener {
                     $sender->sendMessage($this->prefix . "Please enter a player and a command.");
                     return true;
                 }
-                $player = $this->getServer()->getPlayer(array_shift($args));
+                $player = $this->getServer()->getPlayerExact(array_shift($args));
                 if ($player instanceof Player) {
                     $this->getServer()->dispatchCommand($player, trim(implode(" ", $args)));
                     return true;
@@ -235,7 +235,7 @@ class Main extends PluginBase implements Listener {
                                 $sender->sendMessage($this->prefix . "Hit an entity to remove it.");
                                 return true;
                             }
-                            $entity = $sender->getLevel()->getEntity((int) $args[0]);
+                            $entity = $sender->getWorld()->getEntity((int) $args[0]);
                             if ($entity !== null) {
                                 if ($entity instanceof SlapperEntity || $entity instanceof SlapperHuman) {
                                     (new SlapperDeletionEvent($entity))->call();
@@ -254,8 +254,8 @@ class Main extends PluginBase implements Listener {
                                 return true;
                             }
                             if (isset($args[0])) {
-                                $level = $sender->getLevel();
-                                $entity = $level->getEntity((int) $args[0]);
+                                $world = $sender->getWorld();
+                                $entity = $world->getEntity((int) $args[0]);
                                 if ($entity !== null) {
                                     if ($entity instanceof SlapperEntity || $entity instanceof SlapperHuman) {
                                         if (isset($args[1])) {
@@ -563,7 +563,7 @@ class Main extends PluginBase implements Listener {
                             }
                             $nbt = $this->makeNBT($chosenType, $sender, $name);
                             /** @var SlapperEntity $entity */
-                            $entity = Entity::createEntity("Slapper" . $chosenType, $sender->getLevel(), $nbt);
+                            $entity = Entity::createEntity("Slapper" . $chosenType, $sender->getWorld(), $nbt);
                             (new SlapperCreationEvent($entity, "Slapper" . $chosenType, $sender, SlapperCreationEvent::CAUSE_COMMAND))->call();
                             $entity->spawnToAll();
                             $sender->sendMessage($this->prefix . $chosenType . " entity spawned with name " . TextFormat::WHITE . "\"" . TextFormat::BLUE . $name . TextFormat::WHITE . "\"" . TextFormat::GREEN . " and entity ID " . TextFormat::BLUE . $entity->getId());
@@ -651,7 +651,7 @@ class Main extends PluginBase implements Listener {
                 $server = $this->getServer();
                 /** @var StringTag $stringTag */
                 foreach ($commands as $stringTag) {
-                    $server->dispatchCommand(new ConsoleCommandSender(), str_replace("{player}", '"' . $damagerName . '"', $stringTag->getValue()));
+                    $server->dispatchCommand(new ConsoleCommandSender($server, $server->getLanguage()), str_replace("{player}", '"' . $damagerName . '"', $stringTag->getValue()));
                 }
             }
         }
