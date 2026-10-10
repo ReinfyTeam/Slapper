@@ -5,37 +5,46 @@ declare(strict_types=1);
 namespace slapper\entities;
 
 use pocketmine\entity\Human;
-use pocketmine\level\Level;
+use pocketmine\entity\Location;
 use pocketmine\nbt\tag\CompoundTag;
-use pocketmine\network\mcpe\protocol\SetActorDataPacket as SetEntityDataPacket;
-use pocketmine\Player;
+use pocketmine\network\mcpe\protocol\SetActorDataPacket;
+use pocketmine\network\mcpe\protocol\types\entity\EntityMetadataProperties;
+use pocketmine\network\mcpe\protocol\types\entity\PropertySyncData;
+use pocketmine\network\mcpe\protocol\types\entity\StringMetadataProperty;
+use pocketmine\player\Player;
 use slapper\SlapperTrait;
 
 class SlapperHuman extends Human {
     use SlapperTrait;
 
-    public function __construct(Level $level, CompoundTag $nbt) {
-        parent::__construct($level, $nbt);
+    public function __construct(Location $location, ?CompoundTag $nbt = null) {
+        $nbt ??= CompoundTag::create();
+        parent::__construct($location, self::parseSkinNBT($nbt), $nbt);
+    }
+
+    protected function initEntity(CompoundTag $nbt): void {
+        $this->namedtag = $nbt;
+        parent::initEntity($nbt);
         $this->prepareMetadata();
     }
 
-    public function saveNBT(): void {
-        parent::saveNBT();
-        $this->saveSlapperNbt();
-    }
-
-    public function sendNameTag(Player $player): void {
-        $pk = new SetEntityDataPacket();
-        $pk->entityRuntimeId = $this->getId();
-        $pk->metadata = [self::DATA_NAMETAG => [self::DATA_TYPE_STRING, $this->getDisplayName($player)]];
-        $player->dataPacket($pk);
+    public function saveNBT(): CompoundTag {
+        $nbt = parent::saveNBT();
+        $this->saveSlapperNbt($nbt);
+        return $nbt;
     }
 
     protected function sendSpawnPacket(Player $player): void {
         parent::sendSpawnPacket($player);
+        $this->sendNameTag($player);
+    }
 
-        if (($menuName = $this->namedtag->getString("MenuName", "", true)) !== "") {
-            $player->getServer()->updatePlayerListData($this->getUniqueId(), $this->getId(), $menuName, $this->skin, "", [$player]);
-        }
+    public function sendNameTag(Player $player): void {
+        $player->getNetworkSession()->sendDataPacket(SetActorDataPacket::create(
+            $this->getId(),
+            [EntityMetadataProperties::NAMETAG => new StringMetadataProperty($this->getDisplayNameFor($player))],
+            new PropertySyncData([], []),
+            0
+        ));
     }
 }
