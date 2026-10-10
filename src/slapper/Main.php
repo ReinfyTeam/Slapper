@@ -14,13 +14,16 @@ use pocketmine\event\entity\EntityDamageEvent;
 use pocketmine\event\entity\EntitySpawnEvent;
 use pocketmine\event\entity\EntityMotionEvent;
 use pocketmine\event\Listener;
+use pocketmine\entity\EntityDataHelper;
 use pocketmine\item\Item;
+use pocketmine\entity\EntityFactory;
 
 use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\nbt\tag\StringTag;
-use pocketmine\Player;
+use pocketmine\player\Player;
 use pocketmine\plugin\PluginBase;
 use pocketmine\utils\TextFormat;
+use pocketmine\world\World;
 
 use slapper\entities\other\{
     SlapperBoat, SlapperFallingSand, SlapperMinecart, SlapperPrimedTNT
@@ -142,9 +145,23 @@ class Main extends PluginBase implements Listener {
                      SlapperPolarBear::class, SlapperShulker::class, SlapperVex::class,
                      SlapperVindicator::class, SlapperWither::class
                  ] as $className) {
-            Entity::registerEntity($className, true);
+            $this->registerSlapperEntity($className);
         }
         $this->getServer()->getPluginManager()->registerEvents($this, $this);
+    }
+
+    /**
+     * @param class-string<Entity> $className
+     */
+    private function registerSlapperEntity(string $className): void {
+        $saveName = substr($className, strrpos($className, "\\") + 1);
+        EntityFactory::getInstance()->register(
+            $className,
+            static function (World $world, CompoundTag $nbt) use ($className): Entity {
+                return new $className(EntityDataHelper::parseLocation($nbt, $world), $nbt);
+            },
+            [$saveName]
+        );
     }
 
     /**
