@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace slapper\entities\other;
 
-use pocketmine\block\BlockFactory;
-use pocketmine\level\Level;
+use pocketmine\entity\Location;
+use pocketmine\entity\object\FallingBlock as NativeFallingBlock;
 use pocketmine\nbt\tag\CompoundTag;
-use pocketmine\nbt\tag\IntTag;
+use pocketmine\block\RuntimeBlockStateRegistry;
+use pocketmine\network\mcpe\convert\TypeConverter;
+use pocketmine\network\mcpe\protocol\types\entity\EntityMetadataProperties;
 use slapper\entities\SlapperEntity;
 
 class SlapperFallingSand extends SlapperEntity {
@@ -15,19 +17,30 @@ class SlapperFallingSand extends SlapperEntity {
     const TYPE_ID = 66;
     const HEIGHT = 0.98;
 
-    public function __construct(Level $level, CompoundTag $nbt) {
-        parent::__construct($level, $nbt);
-        if (!$this->namedtag->hasTag("BlockID", IntTag::class)) {
-            $this->namedtag->setInt("BlockID", 1, true);
-        }
-
-        //haxx: we shouldn't use toStaticRuntimeId() because it's internal, but there isn't really any better option at the moment
-        $this->getDataPropertyManager()->setInt(self::DATA_VARIANT, BlockFactory::toStaticRuntimeId($this->namedtag->getInt("BlockID")));
+    public function __construct(Location $location, ?CompoundTag $nbt = null) {
+        parent::__construct($location, $nbt);
     }
 
-    public function saveNBT(): void {
-        parent::saveNBT();
-        $this->namedtag->setInt("BlockID", $this->getDataPropertyManager()->getInt(self::DATA_VARIANT), true);
+    public function prepareMetadata(): void {
+        parent::prepareMetadata();
+
+        $blockId = $this->namedtag->getInt("BlockID", 1);
+        $blockMeta = $this->namedtag->getInt("BlockMeta", 0);
+        $this->namedtag->setInt("BlockID", $blockId);
+        $this->namedtag->setInt("BlockMeta", $blockMeta);
+        $this->namedtag->setInt("TileID", $blockId);
+        $this->namedtag->setByte("Data", $blockMeta);
+
+        $block = NativeFallingBlock::parseBlockNBT(RuntimeBlockStateRegistry::getInstance(), $this->namedtag);
+        $networkId = TypeConverter::getInstance()->getBlockTranslator()->internalIdToNetworkId($block->getStateId());
+        $this->getNetworkProperties()->setInt(EntityMetadataProperties::VARIANT, $networkId);
+    }
+
+    public function saveNBT(): CompoundTag {
+        $nbt = parent::saveNBT();
+        $nbt->setInt("BlockID", $this->namedtag->getInt("BlockID", 1));
+        $nbt->setInt("BlockMeta", $this->namedtag->getInt("BlockMeta", 0));
+        return $nbt;
     }
 
 }
