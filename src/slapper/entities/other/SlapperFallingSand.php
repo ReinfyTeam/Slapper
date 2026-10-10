@@ -36,6 +36,12 @@ class SlapperFallingSand extends SlapperEntity {
         $this->getNetworkProperties()->setInt(EntityMetadataProperties::VARIANT, $networkId);
     }
 
+    public function setBlockId(int $blockId, int $blockMeta = 0): void {
+        $this->namedtag->setInt("BlockID", $blockId);
+        $this->namedtag->setInt("BlockMeta", $blockMeta);
+        $this->prepareMetadata();
+    }
+
     public function saveNBT(): CompoundTag {
         $nbt = parent::saveNBT();
         $nbt->setInt("BlockID", $this->namedtag->getInt("BlockID", 1));

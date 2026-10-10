@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace slapper;
 
-use pocketmine\block\BlockFactory;
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\console\ConsoleCommandSender;
@@ -84,10 +83,10 @@ class Main extends PluginBase implements Listener {
         "Emite" => "Endermite"
     ];
 
-    /** @var array */
-    public $hitSessions = [];
-    /** @var array */
-    public $idSessions = [];
+    /** @var array<string, bool> */
+    public array $hitSessions = [];
+    /** @var array<string, bool> */
+    public array $idSessions = [];
     /** @var string */
     public $prefix = TextFormat::GREEN . "[" . TextFormat::YELLOW . "Slapper" . TextFormat::GREEN . "] ";
     /** @var string */
@@ -412,14 +411,14 @@ class Main extends PluginBase implements Listener {
                                                         array_shift($args);
                                                         $input = trim(implode(" ", $args));
 
-                                                        $commands = $entity->namedtag->getCompoundTag("Commands") ?? new CompoundTag("Commands");
+                                                        $commands = $entity->namedtag->getCompoundTag("Commands") ?? CompoundTag::create();
 
-                                                        if ($commands->hasTag($input)) {
+                                                        if ($commands->getTag($input) !== null) {
                                                             $sender->sendMessage($this->prefix . "That command has already been added.");
                                                             return true;
                                                         }
                                                         $commands->setString($input, $input);
-                                                        $entity->namedtag->setTag($commands); //in case a new CompoundTag was created
+                                                        $entity->namedtag->setTag("Commands", $commands); //in case a new CompoundTag was created
                                                         $sender->sendMessage($this->prefix . "Command added.");
                                                     } else {
                                                         $sender->sendMessage($this->prefix . "Please enter a command.");
@@ -434,10 +433,10 @@ class Main extends PluginBase implements Listener {
                                                         array_shift($args);
                                                         $input = trim(implode(" ", $args));
 
-                                                        $commands = $entity->namedtag->getCompoundTag("Commands") ?? new CompoundTag("Commands");
+                                                        $commands = $entity->namedtag->getCompoundTag("Commands") ?? CompoundTag::create();
 
                                                         $commands->removeTag($input);
-                                                        $entity->namedtag->setTag($commands); //in case a new CompoundTag was created
+                                                        $entity->namedtag->setTag("Commands", $commands); //in case a new CompoundTag was created
                                                         $sender->sendMessage($this->prefix . "Command removed.");
                                                     } else {
                                                         $sender->sendMessage($this->prefix . "Please enter a command.");
@@ -467,7 +466,7 @@ class Main extends PluginBase implements Listener {
                                                         if ($entity instanceof SlapperFallingSand) {
                                                             $data = explode(":", $args[2]);
                                                             //haxx: we shouldn't use toStaticRuntimeId() because it's internal, but there isn't really any better option at the moment
-                                                            $entity->getDataPropertyManager()->setInt(Entity::DATA_VARIANT, BlockFactory::toStaticRuntimeId((int) ($data[0] ?? 1), (int) ($data[1] ?? 0)));
+                                                            $entity->setBlockId((int) $data[0], (int) ($data[1] ?? 0));
                                                             $entity->sendData($entity->getViewers());
                                                             $sender->sendMessage($this->prefix . "Block updated.");
                                                         } else {
@@ -481,7 +480,7 @@ class Main extends PluginBase implements Listener {
                                                 case "tphere":
                                                 case "movehere":
                                                 case "bringhere":
-                                                    $entity->teleport($sender);
+                                                    $entity->teleport($sender->getPosition());
                                                     $sender->sendMessage($this->prefix . "Teleported entity to you.");
                                                     $entity->respawnToAll();
                                                     return true;
@@ -490,14 +489,14 @@ class Main extends PluginBase implements Listener {
                                                 case "goto":
                                                 case "teleport":
                                                 case "tp":
-                                                    $sender->teleport($entity);
+                                                    $sender->teleport($entity->getPosition());
                                                     $sender->sendMessage($this->prefix . "Teleported you to entity.");
                                                     return true;
                                                 case "scale":
                                                 case "size":
                                                     if (isset($args[2])) {
                                                         $scale = (float) $args[2];
-                                                        $entity->getDataPropertyManager()->setFloat(Entity::DATA_SCALE, $scale);
+                                                        $entity->setScale($scale);
                                                         $entity->sendData($entity->getViewers());
                                                         $sender->sendMessage($this->prefix . "Updated scale.");
                                                     } else {
@@ -706,7 +705,7 @@ class Main extends PluginBase implements Listener {
         $entity = $ev->getEntity();
         if ($entity instanceof SlapperEntity || $entity instanceof SlapperHuman) {
             $clearLagg = $this->getServer()->getPluginManager()->getPlugin("ClearLagg");
-            if ($clearLagg !== null) {
+            if ($clearLagg !== null && method_exists($clearLagg, "exemptEntity")) {
                 $clearLagg->exemptEntity($entity);
             }
         }
