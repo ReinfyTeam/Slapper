@@ -161,10 +161,70 @@ class Main extends PluginBase implements Listener {
         EntityFactory::getInstance()->register(
             $className,
             static function (World $world, CompoundTag $nbt) use ($className): Entity {
-                return new $className(EntityDataHelper::parseLocation($nbt, $world), $nbt);
+                return self::createSlapperEntity($className, $world, $nbt);
             },
             [$saveName]
         );
+    }
+
+    /**
+     * @param class-string<Entity> $className
+     */
+    private static function createSlapperEntity(string $className, World $world, CompoundTag $nbt): Entity {
+        $location = EntityDataHelper::parseLocation($nbt, $world);
+        return match ($className) {
+            SlapperCreeper::class => new SlapperCreeper($location, $nbt),
+            SlapperBat::class => new SlapperBat($location, $nbt),
+            SlapperSheep::class => new SlapperSheep($location, $nbt),
+            SlapperPigZombie::class => new SlapperPigZombie($location, $nbt),
+            SlapperGhast::class => new SlapperGhast($location, $nbt),
+            SlapperBlaze::class => new SlapperBlaze($location, $nbt),
+            SlapperIronGolem::class => new SlapperIronGolem($location, $nbt),
+            SlapperSnowman::class => new SlapperSnowman($location, $nbt),
+            SlapperOcelot::class => new SlapperOcelot($location, $nbt),
+            SlapperZombieVillager::class => new SlapperZombieVillager($location, $nbt),
+            SlapperHuman::class => new SlapperHuman($location, $nbt),
+            SlapperCow::class => new SlapperCow($location, $nbt),
+            SlapperZombie::class => new SlapperZombie($location, $nbt),
+            SlapperSquid::class => new SlapperSquid($location, $nbt),
+            SlapperVillager::class => new SlapperVillager($location, $nbt),
+            SlapperSpider::class => new SlapperSpider($location, $nbt),
+            SlapperPig::class => new SlapperPig($location, $nbt),
+            SlapperMushroomCow::class => new SlapperMushroomCow($location, $nbt),
+            SlapperWolf::class => new SlapperWolf($location, $nbt),
+            SlapperLavaSlime::class => new SlapperLavaSlime($location, $nbt),
+            SlapperSilverfish::class => new SlapperSilverfish($location, $nbt),
+            SlapperSkeleton::class => new SlapperSkeleton($location, $nbt),
+            SlapperSlime::class => new SlapperSlime($location, $nbt),
+            SlapperChicken::class => new SlapperChicken($location, $nbt),
+            SlapperEnderman::class => new SlapperEnderman($location, $nbt),
+            SlapperCaveSpider::class => new SlapperCaveSpider($location, $nbt),
+            SlapperBoat::class => new SlapperBoat($location, $nbt),
+            SlapperMinecart::class => new SlapperMinecart($location, $nbt),
+            SlapperMule::class => new SlapperMule($location, $nbt),
+            SlapperWitch::class => new SlapperWitch($location, $nbt),
+            SlapperPrimedTNT::class => new SlapperPrimedTNT($location, $nbt),
+            SlapperHorse::class => new SlapperHorse($location, $nbt),
+            SlapperDonkey::class => new SlapperDonkey($location, $nbt),
+            SlapperSkeletonHorse::class => new SlapperSkeletonHorse($location, $nbt),
+            SlapperZombieHorse::class => new SlapperZombieHorse($location, $nbt),
+            SlapperRabbit::class => new SlapperRabbit($location, $nbt),
+            SlapperStray::class => new SlapperStray($location, $nbt),
+            SlapperHusk::class => new SlapperHusk($location, $nbt),
+            SlapperWitherSkeleton::class => new SlapperWitherSkeleton($location, $nbt),
+            SlapperFallingSand::class => new SlapperFallingSand($location, $nbt),
+            SlapperElderGuardian::class => new SlapperElderGuardian($location, $nbt),
+            SlapperEndermite::class => new SlapperEndermite($location, $nbt),
+            SlapperEvoker::class => new SlapperEvoker($location, $nbt),
+            SlapperGuardian::class => new SlapperGuardian($location, $nbt),
+            SlapperLlama::class => new SlapperLlama($location, $nbt),
+            SlapperPolarBear::class => new SlapperPolarBear($location, $nbt),
+            SlapperShulker::class => new SlapperShulker($location, $nbt),
+            SlapperVex::class => new SlapperVex($location, $nbt),
+            SlapperVindicator::class => new SlapperVindicator($location, $nbt),
+            SlapperWither::class => new SlapperWither($location, $nbt),
+            default => throw new \InvalidArgumentException("Unknown Slapper entity class: " . $className)
+        };
     }
 
     /**
