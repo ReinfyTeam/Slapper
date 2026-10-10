@@ -17,6 +17,7 @@ use pocketmine\event\Listener;
 use pocketmine\entity\EntityDataHelper;
 use pocketmine\item\Item;
 use pocketmine\entity\EntityFactory;
+use pocketmine\item\StringToItemParser;
 
 use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\nbt\tag\StringTag;
@@ -267,8 +268,10 @@ class Main extends PluginBase implements Listener {
                                                 case "cap":
                                                     if ($entity instanceof SlapperHuman) {
                                                         if (isset($args[2])) {
-                                                            $entity->getArmorInventory()->setHelmet(Item::fromString($args[2]));
-                                                            $sender->sendMessage($this->prefix . "Helmet updated.");
+                                                            if (($item = $this->parseItem($sender, $args[2])) !== null) {
+                                                                $entity->getArmorInventory()->setHelmet($item);
+                                                                $sender->sendMessage($this->prefix . "Helmet updated.");
+                                                            }
                                                         } else {
                                                             $sender->sendMessage($this->prefix . "Please enter an item ID.");
                                                         }
@@ -281,8 +284,10 @@ class Main extends PluginBase implements Listener {
                                                 case "chestplate":
                                                     if ($entity instanceof SlapperHuman) {
                                                         if (isset($args[2])) {
-                                                            $entity->getArmorInventory()->setChestplate(Item::fromString($args[2]));
-                                                            $sender->sendMessage($this->prefix . "Chestplate updated.");
+                                                            if (($item = $this->parseItem($sender, $args[2])) !== null) {
+                                                                $entity->getArmorInventory()->setChestplate($item);
+                                                                $sender->sendMessage($this->prefix . "Chestplate updated.");
+                                                            }
                                                         } else {
                                                             $sender->sendMessage($this->prefix . "Please enter an item ID.");
                                                         }
@@ -295,8 +300,10 @@ class Main extends PluginBase implements Listener {
                                                 case "leggings":
                                                     if ($entity instanceof SlapperHuman) {
                                                         if (isset($args[2])) {
-                                                            $entity->getArmorInventory()->setLeggings(Item::fromString($args[2]));
-                                                            $sender->sendMessage($this->prefix . "Leggings updated.");
+                                                            if (($item = $this->parseItem($sender, $args[2])) !== null) {
+                                                                $entity->getArmorInventory()->setLeggings($item);
+                                                                $sender->sendMessage($this->prefix . "Leggings updated.");
+                                                            }
                                                         } else {
                                                             $sender->sendMessage($this->prefix . "Please enter an item ID.");
                                                         }
@@ -309,8 +316,10 @@ class Main extends PluginBase implements Listener {
                                                 case "shoes":
                                                     if ($entity instanceof SlapperHuman) {
                                                         if (isset($args[2])) {
-                                                            $entity->getArmorInventory()->setBoots(Item::fromString($args[2]));
-                                                            $sender->sendMessage($this->prefix . "Boots updated.");
+                                                            if (($item = $this->parseItem($sender, $args[2])) !== null) {
+                                                                $entity->getArmorInventory()->setBoots($item);
+                                                                $sender->sendMessage($this->prefix . "Boots updated.");
+                                                            }
                                                         } else {
                                                             $sender->sendMessage($this->prefix . "Please enter an item ID.");
                                                         }
@@ -325,9 +334,10 @@ class Main extends PluginBase implements Listener {
                                                 case "held":
                                                     if ($entity instanceof SlapperHuman) {
                                                         if (isset($args[2])) {
-                                                            $entity->getInventory()->setItemInHand(Item::fromString($args[2]));
-                                                            $entity->getInventory()->sendHeldItem($entity->getViewers());
-                                                            $sender->sendMessage($this->prefix . "Item updated.");
+                                                            if (($item = $this->parseItem($sender, $args[2])) !== null) {
+                                                                $entity->getInventory()->setItemInHand($item);
+                                                                $sender->sendMessage($this->prefix . "Item updated.");
+                                                            }
                                                         } else {
                                                             $sender->sendMessage($this->prefix . "Please enter an item ID.");
                                                         }
@@ -578,6 +588,14 @@ class Main extends PluginBase implements Listener {
                 }
         }
         return true;
+    }
+
+    private function parseItem(CommandSender $sender, string $input): ?Item {
+        $item = StringToItemParser::getInstance()->parse($input);
+        if ($item === null) {
+            $sender->sendMessage($this->prefix . "Invalid item ID.");
+        }
+        return $item;
     }
 
     /**
