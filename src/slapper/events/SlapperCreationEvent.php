@@ -5,54 +5,38 @@ declare(strict_types=1);
 namespace slapper\events;
 
 use pocketmine\event\entity\EntityEvent;
-use pocketmine\Player;
 use pocketmine\entity\Entity;
+use pocketmine\player\Player;
 
+/** @extends EntityEvent<Entity> */
 class SlapperCreationEvent extends EntityEvent {
 
-    const CAUSE_COMMAND = 0;
+    public const CAUSE_COMMAND = 0;
 
-    /** @var Entity */
-    protected $entity;
-    /** @var string */
-    private $type;
-    /** @var Player|null */
-    private $creator;
-    /** @var int */
-    private $cause;
+    private string $type;
+    private ?Player $creator;
+    private int $cause;
 
-
-    /**
-     * @param Entity      $entity
-     * @param string      $type
-     * @param Player|null $creator
-     * @param int         $cause
-     */
-    public function __construct(Entity $entity, $type, Player $creator = null, $cause = self::CAUSE_COMMAND) {
+    public function __construct(Entity $entity, string $type, ?Player $creator = null, int $cause = self::CAUSE_COMMAND) {
         $this->entity = $entity;
         $this->type = $type;
         $this->creator = $creator;
         $this->cause = $cause;
     }
 
-    public function getEntity(): Entity {
-        return $this->entity;
-    }
-
-    public function getCreator(): ?Player {
+    public function getCreator() : ?Player {
         return $this->creator;
     }
 
-    public function hasCreator(): bool {
+    public function hasCreator() : bool {
         return $this->creator !== null;
     }
 
-    public function getCause(): int {
+    public function getCause() : int {
         return $this->cause;
     }
 
-    public function getType(): string {
+    public function getType() : string {
         return $this->type;
     }
-
 }
