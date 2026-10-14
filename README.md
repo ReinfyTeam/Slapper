@@ -9,7 +9,7 @@ Slapper is an NPC plugin for PocketMine-MP servers. This ReinfyTeam-maintained f
 - PocketMine-MP API `5.0.0` or newer.
 - PHP 8.1 or newer for development and packaging.
 
-The project is designed and supported for [PocketMine-MP](https://github.com/pmmp/PocketMine-MP). Compatibility with unofficial variants is not promised. The campaign verification environment also tested the packaged plugin on Axolotl-PM `5.49.1`; that is a tested environment, not a claim that every 5.x release is supported.
+The project is designed and supported for [PocketMine-MP](https://github.com/pmmp/PocketMine-MP). Compatibility with unofficial variants is not promised. Exact tested runtime revisions are recorded with the relevant release evidence; they do not expand the supported API range stated above.
 
 ## Addons
 
@@ -120,7 +120,7 @@ Before a release, validate the PHAR manifest and checksum, load it in an isolate
 
 The plugin manifest declares API `5.0.0`. Minimum API, supported range and tested server versions are separate claims; see release notes and campaign verification records for exact commits and runtime evidence.
 
-The campaign verification environment tested the packaged plugin on Axolotl-PM `5.49.1`. This is a tested environment, not a claim that every 5.x release is supported.
+Release verification records may identify a specific compatible runtime revision when reproducing a release; that evidence is separate from the supported API range stated above.
 
 Release artifacts and source history are published on the [ReinfyTeam GitHub repository](https://github.com/ReinfyTeam/Slapper). Existing upstream attribution, LGPL-3.0-or-later licensing and original author credits are preserved in [LICENSE](LICENSE).
 
